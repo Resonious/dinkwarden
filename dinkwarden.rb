@@ -149,7 +149,7 @@ def peasant_command(bot, mention)
   lambda do |event|
     msg = ""
     msg += "#{event.author.mention} " if mention
-    msg += %(FOOLISH FOOL ... PEASANT).sample
+    msg += %w(FOOLISH FOOL ... PEASANT).sample
     event.respond msg
   end
 end
