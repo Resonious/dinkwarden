@@ -18,7 +18,7 @@ if Config.email.blank? || Config.password.blank?
 end
 
 bot = Discordrb::Bot.new(Config.email, Config.password)
-admins = ['Dinkyman', 'Resonious']
+admins = ['dinkyman', 'Resonious']
 
 @admin_instances = {}
 @server  = nil
