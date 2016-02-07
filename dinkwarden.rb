@@ -32,7 +32,7 @@ admins = Config.admins
 @responded_to_love = false
 @time_last_taunted = Time.now
 
-def initialize_warden(event)
+def initialize_warden(bot, event)
   @server = event.server
 
   if @server.nil?
@@ -60,7 +60,7 @@ end
 bot.message(from: admins) do |event|
   case event.message 
   when warden?
-    initialize_warden(event)
+    initialize_warden(bot, event)
 
   when jail?
     @server = event.server
