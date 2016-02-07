@@ -8,6 +8,7 @@ class Config
   class << self
     attr_accessor :email
     attr_accessor :password
+    attr_accessor :admins
   end
 end
 require_relative 'config.rb'
@@ -18,7 +19,7 @@ if Config.email.blank? || Config.password.blank?
 end
 
 bot = Discordrb::Bot.new(Config.email, Config.password)
-admins = ['dinkyman', 'Resonious']
+admins = Config.admins
 
 @admin_instances = {}
 @server  = nil
@@ -28,31 +29,38 @@ admins = ['dinkyman', 'Resonious']
 @leave_attempts = {}
 @quiet = false
 @asking_about_quiet = {}
+@responded_to_love = false
+@time_last_taunted = Time.now
+
+def initialize_warden(event)
+  @server = event.server
+
+  if @server.nil?
+    event.respond "#{event.author.mention} I COULD NOT FIND YOUR SERVER. SORRY SIR"
+    return
+  end
+
+  @channel_id = event.channel.id
+  @jail       = bot.find('jail', @server.name).first
+
+  unless bot.bot_user.can_move_members?(@server)
+    event.respond "#{event.author.mention} I DO NOT HAVE PERMISSION TO MONITOR THE JAIL"
+    return
+  end
+
+  @admin_instances[event.author.name] = event.author
+
+  event.respond affirmative
+
+  if @jail.nil?
+    event.respond could_not_find_jail
+  end
+end
+
 bot.message(from: admins) do |event|
   case event.message 
   when warden?
-    @server = event.server
-
-    if @server.nil?
-      event.respond "#{event.author.mention} I COULD NOT FIND YOUR SERVER. SORRY SIR"
-      next
-    end
-
-    @channel_id = event.channel.id
-    @jail       = bot.find('jail', @server.name).first
-
-    unless bot.bot_user.can_move_members?(@server)
-      event.respond "#{event.author.mention} I DO NOT HAVE PERMISSION TO MONITOR THE JAIL"
-      next
-    end
-
-    @admin_instances[event.author.name] = event.author
-
-    event.respond affirmative
-
-    if @jail.nil?
-      event.respond could_not_find_jail
-    end
+    initialize_warden(event)
 
   when jail?
     @server = event.server
@@ -125,9 +133,11 @@ def admin_command(bot, private)
         when /yes/
           event.respond "OKAY. TELL ME TO SPEAK UP WHEN YOU CHANGE YOUR MIND"
           @quiet = true
+          @asking_about_quiet[event.author.id] = false
         when /no/
           event.respond "UNDERSTOOD"
           @quiet = false
+          @asking_about_quiet[event.author.id] = false
         else
           event.respond "WHAT WAS THAT???"
         end
@@ -141,6 +151,15 @@ def admin_command(bot, private)
     when speak?
       event.respond "GOT IT"
       @quiet = false
+
+    when compliment?
+      event.respond thank_you
+
+    when love?
+      if !@responded_to_love || Random.rand(3) == 1
+        event.respond uhhhhh
+        @responded_to_love = true
+      end
     end
   end
 end
@@ -165,10 +184,7 @@ bot.voice_state_update(from: not!('DinkWarden'), channel: 'jail') do |event|
   next unless @server.id == event.server.id
   next unless event.channel.type == 'voice'
 
-  if @targets.map(&:id).include? event.user.id
-    # TODO maybe say some nasty message to them
-    next
-  end
+  next if @targets.map(&:id).include? event.user.id
 
   @targets << event.user
   bot.send_message @channel_id, "CRIMINAL! #{event.user.mention}"
@@ -189,7 +205,10 @@ bot.voice_state_update(from: not!('DinkWarden'), channel: not!('jail')) do |even
   @leave_attempts[event.user.id] += 1
 
   @server.move(event.user, @jail)
-  bot.send_message @channel_id, taunt_for_trying_to_leave(event.user) unless @quiet
+  if !@quiet && Time.now >= @time_last_taunted + 2.seconds
+    bot.send_message @channel_id, taunt_for_trying_to_leave(event.user)
+    @time_last_taunted = Time.now
+  end
 
   if @leave_attempts[event.user.id] > 100
     event.user.pm "STOP"

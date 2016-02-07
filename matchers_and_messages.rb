@@ -1,6 +1,6 @@
 def warden?
   proc do |message|
-    message.text.downcase =~ /warden!/
+    message.text.downcase == "warden!"
   end
 end
 
@@ -127,5 +127,47 @@ def speak?
   proc do |message|
     (message.text.downcase =~ /speak/) ||
     (message.text.downcase =~ /can.+talk/)
+  end
+end
+
+def compliment?
+  proc do |message|
+    text = message.text.downcase
+    (text =~ /(good|nice|excellent)\s+(work|job|going)/) ||
+    (text =~ /thanks?/)
+  end
+end
+
+def thank_you
+  [
+    "THANK YOU, SIR",
+    "JUST DOING MY JOB",
+    "SIR!",
+    "THANK YOU"
+  ]
+    .sample
+end
+
+def love?
+  proc do |message|
+    text = message.text.downcase
+    (text =~ /love\s+(you|u)/)
+  end
+end
+
+def uhhhhh
+  if Random.rand(100) == 1
+    "I LOVE YOU TOO"
+  else
+    [
+      "UHH",
+      "THANK YOU...",
+      "JUST UH, DOING MY JOB",
+      "HOW KIND OF YOU, SIR..",
+      "I SEE...",
+      "RIGHT..",
+      "SIR..."
+    ]
+      .sample
   end
 end
