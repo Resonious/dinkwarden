@@ -171,3 +171,40 @@ def uhhhhh
       .sample
   end
 end
+
+def not_you_again(user)
+  [
+    "NOT YOU AGAIN",
+    "#{user.name.upcase}, WE MEET AGAIN",
+    "WELCOME BACK"
+  ]
+    .sample
+end
+
+def peasant(user = nil)
+  msg = user ? "#{user.mention} " : ""
+  msg += [
+    "FOOLISH",
+    "FOOL",
+    "...",
+    "PEASANT"
+  ]
+    .sample
+
+  msg
+end
+
+def good_citizen(user = nil)
+  msg = user ? "#{user.mention} " : ""
+  msg += [
+    "A LAW ABIDING CITIZEN",
+    "YOU ARE A GOOD PERSON",
+    "I RESPECT YOU",
+    "HELLO",
+    "HOW ARE YOU DOING",
+    "PLEASED TO MEET YOU"
+  ]
+    .sample
+
+  msg
+end

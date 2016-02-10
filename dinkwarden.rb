@@ -67,6 +67,8 @@ bot.message(from: admins) do |event|
     event.message.mentions.each do |partial_user|
       @targets << partial_user
       @server.move(partial_user, @jail)
+
+      bot.game = "Keeping the call safe"
     end
   end
 end
@@ -82,6 +84,8 @@ def admin_command(bot, private)
 
         if user_names_to_release.empty?
           event.respond "RELEASE WHO? SPECIFY USERS TO RELEASE WITH @USERNAME"
+          sleep 1
+          event.respond "ACTUAL @MENTIONS INDEED DON'T WORK IN PRIVATE CHAT BUT I CAN STILL READ"
         end
 
         user_names_to_release.each do |user_name|
@@ -119,6 +123,7 @@ def admin_command(bot, private)
           end
         end
       end
+      bot.game = nil if @targets.blank?
 
     when criminals?
       if @targets.empty?
@@ -166,10 +171,13 @@ end
 
 def peasant_command(bot, mention)
   lambda do |event|
-    msg = ""
-    msg += "#{event.author.mention} " if mention
-    msg += %w(FOOLISH FOOL ... PEASANT).sample
-    event.respond msg
+    user = event.author
+
+    if @leave_attempts[user.id] && leave_attempts[user.id] > 2
+      event.respond peasant((user if mention))
+    else
+      event.respond good_citizen((user if mention))
+    end
   end
 end
 
@@ -188,9 +196,11 @@ bot.voice_state_update(from: not!('DinkWarden'), channel: 'jail') do |event|
 
   @targets << event.user
   bot.send_message @channel_id, "CRIMINAL! #{event.user.mention}"
-  if @leave_attempts[event.user.id] && @leave_attempts[event.user.id] >= 5
-    event.user.pm "NOT YOU AGAIN"
+  if @leave_attempts[event.user.id] && @leave_attempts[event.user.id] >= 10
+    event.user.pm not_you_again(event.user)
   end
+
+  bot.game = "Keeping the call safe"
 end
 
 bot.voice_state_update(from: not!('DinkWarden'), channel: not!('jail')) do |event|
