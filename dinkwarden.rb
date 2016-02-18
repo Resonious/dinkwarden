@@ -65,10 +65,13 @@ bot.message(from: admins) do |event|
   when jail?
     @server = event.server
     event.message.mentions.each do |partial_user|
-      @targets << partial_user
-      @server.move(partial_user, @jail)
+      unless @targets.map(&:id).include?(partial_user.id)
+        @targets << partial_user
+        @server.move(partial_user, @jail)
+        event.respond "IN YOU GO. #{event.user.mention}"
 
-      bot.game = "Keeping the call safe"
+        bot.game = "Keeping the call safe"
+      end
     end
   end
 end
@@ -112,14 +115,15 @@ def admin_command(bot, private)
         event.message.mentions.each do |user|
           next if user.id == bot.bot_user.id
 
-          if @targets.delete_if { |t| t.id == user.id }.empty?
-            event.respond you_are_already_free(user)
-          else
+          if @targets.any? { |t| t.id == user.id }
+            @targets.delete_if { |t| t.id == user.id }
             event.respond you_are_free(user)
 
             if @leave_attempts[user.id] && @leave_attempts[user.id] >= 10
               user.pm "YOU ARE FREE NOW. I EXPECT TO SEE YOU AGAIN"
             end
+          else
+            event.respond you_are_already_free(user)
           end
         end
       end
@@ -129,7 +133,7 @@ def admin_command(bot, private)
       if @targets.empty?
         event.respond no_criminals
       else
-        event.respond "#{@targets.size} CRIMINAL#{'S' if @targets.size != 1} IMPRISONED"
+        event.response "CRIMINALS: #{@targets.map(&:name).join(', ')}"
       end
 
     when quiet?
@@ -187,14 +191,26 @@ bot.message({ from: admins, private: true }, &admin_command(bot, true))
 bot.mention({ from: not!(admins) }, &peasant_command(bot, true))
 bot.message({ from: not!(admins), private: true }, &peasant_command(bot, false))
 
+bot.message(private: false) do |event|
+  if event.message.text =~ /\W*p[eoi]+n[iey]+\W+w[eoyi]+n[iey]+\W*/
+    if @jail && !admins.include?(event.user.name)
+      @targets << event.user
+      event.server.move(event.user, @jail)
+      event.respond "CRIMINAL! #{event.user.mention}"
+    end
+  end
+end
+
 bot.voice_state_update(from: not!('DinkWarden'), channel: 'jail') do |event|
   next if @server.nil? || @jail.nil?
   next unless @server.id == event.server.id
   next unless event.channel.type == 'voice'
 
-  next if @targets.map(&:id).include? event.user.id
+  target_ids = @targets.map(&:id)
+  next if target_ids.include? event.user.id
+  next if admins.include? event.user.name
 
-  @targets << event.user
+  @targets << event.user unless target_ids.include?(event.user.id)
   bot.send_message @channel_id, "CRIMINAL! #{event.user.mention}"
   if @leave_attempts[event.user.id] && @leave_attempts[event.user.id] >= 10
     event.user.pm not_you_again(event.user)
@@ -215,13 +231,13 @@ bot.voice_state_update(from: not!('DinkWarden'), channel: not!('jail')) do |even
   @leave_attempts[event.user.id] += 1
 
   @server.move(event.user, @jail)
-  if !@quiet && Time.now >= @time_last_taunted + 2.seconds
+  if !@quiet && Time.now >= @time_last_taunted + 2.seconds && Random.rand(10) <= 6
     bot.send_message @channel_id, taunt_for_trying_to_leave(event.user)
     @time_last_taunted = Time.now
   end
 
   if @leave_attempts[event.user.id] > 100
-    event.user.pm "STOP"
+    event.user.pm "STOP" if @leave_attempts[event.user.id] == 102
 
     if @leave_attempts[event.user.id] == 101
       @admin_instances.each do |id, admin|
@@ -233,12 +249,10 @@ bot.voice_state_update(from: not!('DinkWarden'), channel: not!('jail')) do |even
     event.user.pm "YOU'RE REALLY GETTING ON MY NERVES"
 
   elsif @leave_attempts[event.user.id] == 25
-    event.user.pm "IT WAS TOO POLITE OF ME TO CALL YOU A PEASANT"
-    sleep 1
-    event.user.pm "ACCEPT YOUR FATE!"
+    event.user.pm "IT'S NO USE. YOU FOOL!"
 
   elsif @leave_attempts[event.user.id] == 10
-    event.user.pm "KNOW YOUR PLACE, PEASANT"
+    event.user.pm "YOU'RE A STUBBORN ONE, NO?"
   end
 end
 

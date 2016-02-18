@@ -50,7 +50,10 @@ def taunt_for_trying_to_leave(user)
     "#{user.mention} YOU FOOL!!!",
     "#{user.mention} YOU ARE IN JAIL",
     "#{user.mention} YOU THINK YOU CAN ESCAPE FROM JAIL?",
-    "#{user.mention} ATTEMPTED TO ESCAPE. HAH!"
+    "#{user.mention} ATTEMPTED TO ESCAPE. HAH!",
+    "#{user.mention} FEEBIL",
+    "#{user.mention} YOU'RE FREE! JUST KIDDING.",
+    "#{user.mention} YOU CANNOT LEAVE THE JAIL"
   ]
     .sample
 end
@@ -69,7 +72,8 @@ def you_are_free(user)
   [
     "#{user.mention} YOU ARE FREE",
     "#{user.mention} YOU ARE NOW ALLOWED TO LEAVE JAIL",
-    "#{user.mention} FREE TO GO"
+    "#{user.mention} FREE TO GO",
+    "BE FREE, #{user.mention}"
   ]
     .sample
 end
