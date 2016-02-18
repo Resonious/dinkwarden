@@ -21,6 +21,8 @@ end
 bot = Discordrb::Bot.new(Config.email, Config.password)
 admins = Config.admins
 
+VERSION = 1.0
+
 @admin_instances = {}
 @server  = nil
 @jail    = nil
@@ -31,6 +33,17 @@ admins = Config.admins
 @asking_about_quiet = {}
 @responded_to_love = false
 @time_last_taunted = Time.now
+
+begin
+  version_from_file = IO.read("version.txt").to_f
+  if VERSION > version_from_file
+    @new_version = true
+    IO.write("version.txt", '%.1f' % VERSION)
+  end
+
+rescue Exception => e
+  puts "#{e}: #{e.message} reading file"
+end
 
 def initialize_warden(bot, event)
   @server = event.server
@@ -51,6 +64,9 @@ def initialize_warden(bot, event)
   @admin_instances[event.author.name] = event.author
 
   event.respond affirmative
+  if @new_version
+    event.respond "I HAVE RECEIVED AN UPGRADE!"
+  end
 
   if @jail.nil?
     event.respond could_not_find_jail
