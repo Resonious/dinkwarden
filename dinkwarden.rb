@@ -21,7 +21,7 @@ end
 bot = Discordrb::Bot.new(Config.email, Config.password)
 admins = Config.admins
 
-VERSION = 1.0
+VERSION = 1.2
 
 @admin_instances = {}
 @server  = nil
@@ -66,6 +66,7 @@ def initialize_warden(bot, event)
   event.respond affirmative
   if @new_version
     event.respond "I HAVE RECEIVED AN UPGRADE!"
+    @new_version = false
   end
 
   if @jail.nil?
@@ -193,7 +194,7 @@ def peasant_command(bot, mention)
   lambda do |event|
     user = event.author
 
-    if @leave_attempts[user.id] && leave_attempts[user.id] > 2
+    if @targets.map(&:id).include?(user.id) || (@leave_attempts[user.id] && leave_attempts[user.id] > 2)
       event.respond peasant((user if mention))
     else
       event.respond good_citizen((user if mention))
