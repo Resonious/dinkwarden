@@ -21,7 +21,7 @@ end
 bot = Discordrb::Bot.new(Config.email, Config.password)
 admins = Config.admins
 
-VERSION = 1.2
+VERSION = 1.3
 
 @admin_instances = {}
 @server  = nil

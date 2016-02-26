@@ -16,8 +16,7 @@ def jail?
     !message.mentions.empty? && (
       (message.text.downcase =~ /jail/)    ||
       (message.text.downcase =~ /turn in/) ||
-      (message.text.downcase =~ /lock\s+.+up/) ||
-      (message.text.downcase =~ /how\s+many/)
+      (message.text.downcase =~ /lock\s+.+up/)
     )
   end
 end
@@ -97,7 +96,8 @@ def criminals?
     (message.text.downcase =~ /list/) ||
     (message.text.downcase =~ /who.+\s+jail/) ||
     (message.text.downcase =~ /criminals/) ||
-    (message.text.downcase =~ /target/)
+    (message.text.downcase =~ /target/) ||
+    (message.text.downcase =~ /how\W+many/)
   end
 end
 
