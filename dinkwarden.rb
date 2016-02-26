@@ -21,7 +21,7 @@ end
 bot = Discordrb::Bot.new(Config.email, Config.password)
 admins = Config.admins
 
-VERSION = 1.3
+VERSION = 1.4
 
 @admin_instances = {}
 @server  = nil
@@ -237,39 +237,50 @@ bot.voice_state_update(from: not!('DinkWarden'), channel: 'jail') do |event|
 end
 
 bot.voice_state_update(from: not!('DinkWarden'), channel: not!('jail')) do |event|
-  puts "#{event.user.name} joined #{event.channel.name}"
+  begin
+    puts "#{event.user.name} joined #{event.channel.name}"
 
-  next if @server.nil? || @jail.nil?
-  next unless @server.id == event.server.id
-  next unless event.channel.type == 'voice'
-  next unless @targets.map(&:id).include? event.user.id
+    next if @server.nil? || @jail.nil?
+    next unless @server.id == event.server.id
+    next unless event.channel.type == 'voice'
+    next unless @targets.map(&:id).include? event.user.id
 
-  @leave_attempts[event.user.id] ||= 0
-  @leave_attempts[event.user.id] += 1
+    @leave_attempts[event.user.id] ||= 0
+    @leave_attempts[event.user.id] += 1
 
-  @server.move(event.user, @jail)
-  if !@quiet && Time.now >= @time_last_taunted + 2.seconds && Random.rand(10) <= 6
-    bot.send_message @channel_id, taunt_for_trying_to_leave(event.user)
-    @time_last_taunted = Time.now
-  end
-
-  if @leave_attempts[event.user.id] > 100
-    event.user.pm "STOP" if @leave_attempts[event.user.id] == 102
-
-    if @leave_attempts[event.user.id] == 101
-      @admin_instances.each do |id, admin|
-        admin.pm "#{event.user.mention} HAS ATTEMPTED TO ESCAPE OVER 100 TIMES..."
-      end
+    @server.move(event.user, @jail)
+    if !@quiet && Time.now >= @time_last_taunted + 2.seconds && Random.rand(10) <= 6
+      bot.send_message @channel_id, taunt_for_trying_to_leave(event.user)
+      @time_last_taunted = Time.now
     end
 
-  elsif @leave_attempts[event.user.id] == 50
-    event.user.pm "YOU'RE REALLY GETTING ON MY NERVES"
+    if @leave_attempts[event.user.id] > 100
+      event.user.pm "STOP" if @leave_attempts[event.user.id] == 102
 
-  elsif @leave_attempts[event.user.id] == 25
-    event.user.pm "IT'S NO USE. YOU FOOL!"
+      if @leave_attempts[event.user.id] == 101
+        @admin_instances.each do |id, admin|
+          admin.pm "#{event.user.mention} HAS ATTEMPTED TO ESCAPE OVER 100 TIMES..."
+        end
+      end
 
-  elsif @leave_attempts[event.user.id] == 10
-    event.user.pm "YOU'RE A STUBBORN ONE, NO?"
+    elsif @leave_attempts[event.user.id] == 50
+      event.user.pm "YOU'RE REALLY GETTING ON MY NERVES"
+
+    elsif @leave_attempts[event.user.id] == 25
+      event.user.pm "IT'S NO USE. YOU FOOL!"
+
+    elsif @leave_attempts[event.user.id] == 10
+      event.user.pm "YOU'RE A STUBBORN ONE, NO?"
+    end
+
+  rescue Exception => e
+    sleep 3.5
+
+    @server.move(event.user, @jail)
+    if !@quiet
+      bot.send_message @channel_id, "#{event.user.mention} HEY! GET BACK HERE!"
+      @time_last_taunted = Time.now
+    end
   end
 end
 
