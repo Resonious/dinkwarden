@@ -273,7 +273,7 @@ bot.voice_state_update(from: not!('DinkWarden'), channel: not!('jail')) do |even
       event.user.pm "YOU'RE A STUBBORN ONE, NO?"
     end
 
-  rescue Exception => e
+  rescue StandardError => e
     sleep 3.5
 
     @server.move(event.user, @jail)

@@ -59,11 +59,12 @@ end
 
 def release?
   proc do |message|
-    (message.text.downcase =~ /release/)    ||
-    (message.text.downcase =~ /let\s+.+go/) ||
-    (message.text.downcase =~ /allow\s+\S+\s+to\s+live/) ||
-    (message.text.downcase =~ /free/) ||
-    (message.text.downcase =~ /let go/)
+    text = message.text.downcase
+    (text =~ /release/)    ||
+    (text =~ /let\s+.+go/) ||
+    (text =~ /allow\s+\S+\s+to\s+live/) ||
+    (text =~ /free/) ||
+    (text =~ /let go/)
   end
 end
 
